@@ -20,6 +20,7 @@ while 1
         for j = [2:99]
             % Now we are at the cell to check
             AliveCells = 0;
+            
             % Next nested loop is the border squares to check
             for k = [-1:1]
                 for l = [-1:1]
@@ -28,6 +29,7 @@ while 1
                         % the search
                         continue;
                     end
+                    
                     % Is this cell dead or alive?
                     if A(i + k, j + l) == 1
                         AliveCells = AliveCells + 1;
@@ -35,6 +37,7 @@ while 1
                 end
             end
             % Check cell status and then set B(i,j) to dead or alive.
+            
             if AliveCells < 2
                 B(i, j) = 0;
             elseif AliveCells == 2 || AliveCells == 3
@@ -57,8 +60,10 @@ while 1
         fprintf(rowToPrint + "\n");
     end
     
+    fprintf("Current turn: %d\n", CurrentTurn);
     % Copy new board to old board, reset new board and go to next turn
     A = B;
     B = zeros(20,100);
     CurrentTurn = CurrentTurn + 1;
+    pause(.5);
 end
