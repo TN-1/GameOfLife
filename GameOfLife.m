@@ -1,15 +1,22 @@
 % This script is a simple version of Conway's Game of Life
 
-% For now assume a 100x100 play area (Usable 98x98)
+% For now assume a 20x100 play area (Usable 28x98)
 % A is the current state to be assesed, B is the next turn.
-A = zero(100, 100);
-B = zero(100, 100);
+A = zeros(20, 100);
+B = zeros(20, 100);
 CurrentTurn = 0;
+
+% Add a map seed
+for i = [1:5]
+    for j = [1:5]
+        A(i,j) = 1;
+    end
+end
 
 % Lock the game loop on, eventually this will be a toggle
 while 1
     % Iterate through all cells in the grid
-    for i = [2: 99]
+    for i = [2: 19]
         for j = [2:99]
             % Now we are at the cell to check
             AliveCells = 0;
@@ -39,8 +46,19 @@ while 1
             end
         end 
     end
+    
+    % Print new board to the command window
+    clc;
+    for i = [2: 19]
+        rowToPrint = "";
+        for j = [2:99]
+            rowToPrint = strcat(rowToPrint, num2str(B(i,j)));
+        end
+        fprintf(rowToPrint + "\n");
+    end
+    
     % Copy new board to old board, reset new board and go to next turn
     A = B;
-    B = zero(100,100);
+    B = zeros(20,100);
     CurrentTurn = CurrentTurn + 1;
 end
