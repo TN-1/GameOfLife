@@ -1,7 +1,6 @@
 % This script is a simple version of Conway's Game of Life
 
 % TODO items:
-% Seed strings!
 % Factions
 
 % Clean up workspace to ensure a sane environment
@@ -15,6 +14,7 @@ mapSizeCols = 100;
 mapSizeRows = 100;
 simulationSpeed = 1;
 consoleOutput = false;
+seedString = '405105A';
 
 %%%%% Define Game Mode variables
 currentBoard = zeros(mapSizeRows, mapSizeCols);
@@ -29,12 +29,32 @@ mainFig = figure('Name','Game of Life',...
 set(mainFig, 'KeyPressFcn', @figureKeyPressHandler);
 
 
-% Add a map seed
-for i = 1:10
-    for j = 45:50
-        currentBoard(i,j) = 1;
+% Seed the map
+if ~mod(length(seedString), 7) == 0
+    fprintf("Seed string is wrong length. Expect multiple of 7\n");
+    close all;
+    return;
+end
+
+for i = 1:7:length(seedString)
+    originX = (hex2dec(seedString(i)) * 10) + hex2dec(seedString(i + 2));
+    originY = (hex2dec(seedString(i + 1)) * 10) + hex2dec(seedString(i + 3));
+    type = seedString(i + 4);
+    sizeX = hex2dec(seedString(i + 5));
+    sizeY = hex2dec(seedString(i + 6));
+    
+    switch(type)
+        case '0'
+            % Default
+            for j = originY: originY + sizeY
+                for k = originX: originX + sizeX
+                    currentBoard(j, k) = 1;
+                end
+            end
     end
 end
+
+%return;
 
 % Start game loop
 while ~isPaused   
