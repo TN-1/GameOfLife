@@ -1,24 +1,26 @@
-% This script is a simple version of Conway's Game of Life
-
-% TODO items:
-% Factions
+% This script is a rudementry fire spread simulation
 
 % Clean up workspace to ensure a sane environment
 clearvars;
 close all;
+% Hack path to get cspy.m in
+addpath(genpath('.'))
 
 %%%%% Define User Configurable Variables
+% Seed string format is XXYYTXY
+% Top left corner (XX,YY), Cell type(T), Length(X,Y) in hex
 global isPaused;
 isPaused = false;
 mapSizeCols = 256;
 mapSizeRows = 256;
-simulationSpeed = 5; % 10 is getting laggy
+simulationSpeed = 10; % 10 is getting laggy
 consoleOutput = false;
-seedString = '405115A28013FA48013FA';
+fireStrength = 8; % This will eventually be replaced by maths and data
+seedString = '30306FF010125530016FF';
 
 %%%%% Define Game Mode variables
-currentBoard = zeros(mapSizeRows, mapSizeCols);
-newBoard = zeros(mapSizeRows, mapSizeCols);
+currentBoard = ones(mapSizeRows, mapSizeCols);
+newBoard = ones(mapSizeRows, mapSizeCols);
 CurrentTurn = 0;
 mainFig = figure('Name','Game of Life',...
     'WindowState', 'maximized',...
@@ -27,7 +29,12 @@ mainFig = figure('Name','Game of Life',...
     'DockControls', 'off'...
 );
 set(mainFig, 'KeyPressFcn', @figureKeyPressHandler);
-
+colorMap = [1      1      1;
+            0.3550 0.8350 0.2890;
+            0.8910 0.9950 0.1010;
+            0.9950 0.7190 0;
+            0.9950 0.3390 0.0770;
+            0      0      0];
 
 % Seed the map
 if ~mod(length(seedString), 7) == 0
@@ -37,8 +44,8 @@ if ~mod(length(seedString), 7) == 0
 end
 
 for i = 1:7:length(seedString)
-    originX = (hex2dec(seedString(i)) * 16) + hex2dec(seedString(i + 2));
-    originY = (hex2dec(seedString(i + 1)) * 16) + hex2dec(seedString(i + 3));
+    originX = (hex2dec(seedString(i)) * 16) + hex2dec(seedString(i + 1));
+    originY = (hex2dec(seedString(i + 2)) * 16) + hex2dec(seedString(i + 3));
     type = seedString(i + 4);
     sizeX = hex2dec(seedString(i + 5));
     sizeY = hex2dec(seedString(i + 6));
@@ -58,10 +65,12 @@ while ~isPaused
     for i = 2: mapSizeRows - 1
         for j = 2: mapSizeCols - 1
             % Now we are at the cell to check
-            AliveCells = 0;
-            if currentBoard(i, j) == 3
-                newBoard(i, j) = 3;
-                continue
+            BurningCells = 0;
+            
+            % Lets so if this cell can be skipped
+            if currentBoard(i, j) == 0 || currentBoard(i, j) == 6
+                newBoard(i, j) = currentBoard(i, j);
+                continue;
             end
 
             % Next nested loop is the border squares to check
@@ -74,21 +83,24 @@ while ~isPaused
                     end
 
                     % Is this cell dead or alive?
-                    if currentBoard(i + k, j + l) == 1
-                        AliveCells = AliveCells + 1;
+                    if currentBoard(i + k, j + l) >= 2 && currentBoard(i + k, j + l) <= 5
+                        BurningCells = BurningCells + 1;
                     end
                 end
             end
+            
             % Check cell status and then set B(i, j) to dead or alive.
-
-            if AliveCells < 2
-                newBoard(i, j) = 0;
-            elseif AliveCells == 2 || AliveCells == 3
+            if BurningCells < 2
                 newBoard(i, j) = 1;
-            elseif AliveCells > 3
-                newBoard(i, j) = 0;
-            elseif currentBoard(i, j) == 0 && AliveCells == 3
-                newBoard(i, j) = 1;
+            elseif BurningCells >= 2 || BurningCells <= fireStrength
+                newBoard(i, j) = 2;
+            elseif currentBoard(i, j) == 1 && BurningCells == 3
+                newBoard(i, j) = 2;
+            end
+            
+            % Check if cell is burning, if so, age it
+            if currentBoard(i, j) >= 2 && currentBoard(i, j) <= 5
+                newBoard(i, j) = currentBoard(i, j) + 1;
             end
         end 
     end
@@ -111,11 +123,12 @@ while ~isPaused
 
     % Copy new board to old board, reset new board, output the new board to the figure and go to next turn
     currentBoard = newBoard;
-    newBoard = zeros(mapSizeRows, mapSizeCols);
+    newBoard = ones(mapSizeRows, mapSizeCols);
     CurrentTurn = CurrentTurn + 1;
     clf;
     cspy(currentBoard);
     colorbar('off');
+    colormap(colorMap);
     pause(.5 / simulationSpeed);
 end
     
