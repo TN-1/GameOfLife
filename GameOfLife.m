@@ -10,11 +10,11 @@ close all;
 %%%%% Define User Configurable Variables
 global isPaused;
 isPaused = false;
-mapSizeCols = 100;
-mapSizeRows = 100;
-simulationSpeed = 1;
+mapSizeCols = 256;
+mapSizeRows = 256;
+simulationSpeed = 5; % 10 is getting laggy
 consoleOutput = false;
-seedString = '405105A';
+seedString = '405115A28013FA48013FA';
 
 %%%%% Define Game Mode variables
 currentBoard = zeros(mapSizeRows, mapSizeCols);
@@ -37,20 +37,16 @@ if ~mod(length(seedString), 7) == 0
 end
 
 for i = 1:7:length(seedString)
-    originX = (hex2dec(seedString(i)) * 10) + hex2dec(seedString(i + 2));
-    originY = (hex2dec(seedString(i + 1)) * 10) + hex2dec(seedString(i + 3));
+    originX = (hex2dec(seedString(i)) * 16) + hex2dec(seedString(i + 2));
+    originY = (hex2dec(seedString(i + 1)) * 16) + hex2dec(seedString(i + 3));
     type = seedString(i + 4);
     sizeX = hex2dec(seedString(i + 5));
     sizeY = hex2dec(seedString(i + 6));
     
-    switch(type)
-        case '0'
-            % Default
-            for j = originY: originY + sizeY
-                for k = originX: originX + sizeX
-                    currentBoard(j, k) = 1;
-                end
-            end
+    for j = originY: originY + sizeY
+        for k = originX: originX + sizeX
+            currentBoard(j, k) = hex2dec(type);
+        end
     end
 end
 
@@ -63,6 +59,10 @@ while ~isPaused
         for j = 2: mapSizeCols - 1
             % Now we are at the cell to check
             AliveCells = 0;
+            if currentBoard(i, j) == 3
+                newBoard(i, j) = 3;
+                continue
+            end
 
             % Next nested loop is the border squares to check
             for k = -1:1
@@ -94,6 +94,7 @@ while ~isPaused
     end
 
     % Check if we are configured for console output
+    %%% TODO: Needs to be reworked for variable board size
     if consoleOutput == true
         % Print new board to the command window
         clc;
@@ -112,7 +113,9 @@ while ~isPaused
     currentBoard = newBoard;
     newBoard = zeros(mapSizeRows, mapSizeCols);
     CurrentTurn = CurrentTurn + 1;
-    spy(currentBoard, 'k');
+    clf;
+    cspy(currentBoard);
+    colorbar('off');
     pause(.5 / simulationSpeed);
 end
     
@@ -125,4 +128,4 @@ function figureKeyPressHandler(~, event)
             isPaused = ~isPaused;
             close all;
     end
-end
+end     
