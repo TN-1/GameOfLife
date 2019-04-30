@@ -1,26 +1,27 @@
-% This script is a rudementry fire spread simulation
+% Game of Life in MatLab
 
+%% Initialize Environment
 % Clean up workspace to ensure a sane environment
 clearvars;
 close all;
+
 % Hack path to get cspy.m in
 addpath(genpath('.'))
 
-%%%%% Define User Configurable Variables
+%%% Define User Configurable Variables
 % Seed string format is XXYYTXY
 % Top left corner (XX,YY), Cell type(T), Length(X,Y) in hex
 global isPaused;
 isPaused = false;
-mapSizeCols = 256;
-mapSizeRows = 256;
-simulationSpeed = 10; % 10 is getting laggy
+mapSizeCols = 100;
+mapSizeRows = 100;
+simulationSpeed = 5; % 10 is getting laggy
 consoleOutput = false;
-fireStrength = 8; % This will eventually be replaced by maths and data
-seedString = '30306FF010125530016FF';
+seedString = '32321550101299';
 
-%%%%% Define Game Mode variables
-currentBoard = ones(mapSizeRows, mapSizeCols);
-newBoard = ones(mapSizeRows, mapSizeCols);
+%%% Define Game Mode variables
+currentBoard = 2 * zeros(mapSizeRows, mapSizeCols);
+newBoard = 2 * zeros(mapSizeRows, mapSizeCols);
 CurrentTurn = 0;
 mainFig = figure('Name','Game of Life',...
     'WindowState', 'maximized',...
@@ -30,12 +31,12 @@ mainFig = figure('Name','Game of Life',...
 );
 set(mainFig, 'KeyPressFcn', @figureKeyPressHandler);
 colorMap = [1      1      1;
-            0.3550 0.8350 0.2890;
-            0.8910 0.9950 0.1010;
-            0.9950 0.7190 0;
-            0.9950 0.3390 0.0770;
-            0      0      0];
+            0      1      0;
+            0      0      1];
+        
+        
 
+%% Start Game Mode
 % Seed the map
 if ~mod(length(seedString), 7) == 0
     fprintf("Seed string is wrong length. Expect multiple of 7\n");
@@ -65,13 +66,7 @@ while ~isPaused
     for i = 2: mapSizeRows - 1
         for j = 2: mapSizeCols - 1
             % Now we are at the cell to check
-            BurningCells = 0;
-            
-            % Lets so if this cell can be skipped
-            if currentBoard(i, j) == 0 || currentBoard(i, j) == 6
-                newBoard(i, j) = currentBoard(i, j);
-                continue;
-            end
+            AliveCells = 0;
 
             % Next nested loop is the border squares to check
             for k = -1:1
@@ -83,24 +78,21 @@ while ~isPaused
                     end
 
                     % Is this cell dead or alive?
-                    if currentBoard(i + k, j + l) >= 2 && currentBoard(i + k, j + l) <= 5
-                        BurningCells = BurningCells + 1;
+                    if currentBoard(i + k, j + l) == 1
+                        AliveCells = AliveCells + 1;
                     end
                 end
             end
-            
             % Check cell status and then set B(i, j) to dead or alive.
-            if BurningCells < 2
+
+            if AliveCells < 2
+                newBoard(i, j) = 0;
+            elseif AliveCells == 2 || AliveCells == 3
                 newBoard(i, j) = 1;
-            elseif BurningCells >= 2 || BurningCells <= fireStrength
-                newBoard(i, j) = 2;
-            elseif currentBoard(i, j) == 1 && BurningCells == 3
-                newBoard(i, j) = 2;
-            end
-            
-            % Check if cell is burning, if so, age it
-            if currentBoard(i, j) >= 2 && currentBoard(i, j) <= 5
-                newBoard(i, j) = currentBoard(i, j) + 1;
+            elseif AliveCells > 3
+                newBoard(i, j) = 0;
+            elseif currentBoard(i, j) == 0 && AliveCells == 3
+                newBoard(i, j) = 1;
             end
         end 
     end
@@ -123,15 +115,16 @@ while ~isPaused
 
     % Copy new board to old board, reset new board, output the new board to the figure and go to next turn
     currentBoard = newBoard;
-    newBoard = ones(mapSizeRows, mapSizeCols);
+    newBoard = 2 * zeros(mapSizeRows, mapSizeCols);
     CurrentTurn = CurrentTurn + 1;
     clf;
-    cspy(currentBoard);
-    colorbar('off');
-    colormap(colorMap);
+    spy(currentBoard);
+    %colorbar();
+    %colormap(colorMap);
     pause(.5 / simulationSpeed);
 end
     
+%% Functions
 % Handles keypress for the figure window. YAY for events :)
 function figureKeyPressHandler(~, event)
     global isPaused;
